@@ -13,27 +13,13 @@ class Drawing
 
   attr_reader :width, :height, :elements, :viewbox_width, :viewbox_height
 
-  def line(data, style)
-    unless data.bounded_by?(@viewbox_width, @viewbox_height)
+
+  def draw(shape, style)
+    unless shape.bounded_by?(viewbox_width, viewbox_height)
       raise ArgumentError, "shape is not within view box"
     end
 
-    @elements << [:line, { :x1    => data[0].x.to_s, 
-                           :y1    => data[0].y.to_s, 
-                           :x2    => data[1].x.to_s, 
-                           :y2    => data[1].y.to_s,
-                           :style => style.to_css }] 
-  end
-
-  def polygon(data, style)
-    unless data.bounded_by?(@viewbox_width, @viewbox_height)
-       raise ArgumentError, "shape is not within view box"     
-    end
-
-    @elements << [:polygon, { 
-      :points => data.each.map { |point| "#{point.x},#{point.y}" }.join(" "),
-      :style  => style.to_css
-    }]
+    @elements << shape.to_hash(style)
   end
 
   def to_svg
@@ -49,7 +35,9 @@ class Drawing
                    :version => "1.1" }
 
     builder.svg(svg_params) do |svg|
-      elements.each { |element_type, params| svg.tag!(element_type, params) }
+      elements.each do |e| 
+        svg.tag!(e[:tag_name], e[:params]) 
+      end
     end
 
     builder.target!
@@ -86,9 +74,36 @@ class Drawing
       points.all? { |p| p.x <= x_max && p.y <= y_max }
     end
 
+    def to_hash(*args)
+      raise NotImplementedError, 
+        "This is an abstract method that subclasses need to implement"
+    end
+
     private
 
     attr_reader :points
+  end
+
+  class Line < Shape
+    def to_hash(style)
+      { :tag_name => :line, 
+        :params   => { :x1    => self[0].x.to_s, 
+                       :y1    => self[0].y.to_s, 
+                       :x2    => self[1].x.to_s, 
+                       :y2    => self[1].y.to_s,
+                       :style => style.to_css  } }
+    end
+  end
+
+  class Polygon < Shape
+    def to_hash(style)
+      formatted_points = map { |point| "#{point.x},#{point.y}" }.join(" ")
+
+      { :tag_name => :polygon,
+        :params   => { :points => formatted_points,
+                       :style  => style.to_css } }
+
+    end
   end
   
   class Style
@@ -110,17 +125,15 @@ end
 
 drawing = Drawing.new(4,4)
 
-line1 = Drawing::Shape.new([100, 100], [200, 250])
-line2 = Drawing::Shape.new([300, 100], [200, 250])
+line1 = Drawing::Line.new([100, 100], [200, 250])
+line2 = Drawing::Line.new([300, 100], [200, 250])
 
-triangle = Drawing::Shape.new([350, 150], [250, 300], [150,150])
+triangle = Drawing::Polygon.new([350, 150], [250, 300], [150,150])
 
 style = Drawing::Style.new(:stroke_color => "blue", :stroke_width => 2)
 
-drawing.line(line1, style)
-
-drawing.line(line2, style)
-
-drawing.polygon(triangle, style)
+drawing.draw(line1, style)
+drawing.draw(line2, style)
+drawing.draw(triangle, style)
 
 File.write("sample.svg", drawing.to_svg)
