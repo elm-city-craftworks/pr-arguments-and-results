@@ -135,20 +135,52 @@ class Drawing
 
     attr_reader :drawing, :style
   end
+
+  class Turtle
+    def initialize(drawing, style)
+      @drawing  = drawing
+      @style    = style
+      @inked    = false
+      @position = [0,0]
+    end
+
+    def move_to(next_position)
+      if inked
+        drawing.draw(Line.new(position, next_position), style)
+      end
+      
+      self.position = next_position
+    end
+
+    def pen_up
+      self.inked = false
+    end
+
+    def pen_down 
+      self.inked = true
+    end
+
+    private
+
+    attr_reader   :drawing, :style
+    attr_accessor :position, :inked 
+  end
 end
 
 
-line1 = Drawing::Line.new([100, 100], [200, 250])
-line2 = Drawing::Line.new([300, 100], [200, 250])
-
-triangle = Drawing::Polygon.new([350, 150], [250, 300], [150,150])
-
 drawing = Drawing.new(4,4)
 style   = Drawing::Style.new(:stroke_color => "blue", :stroke_width => 2)
-pen     = Drawing::Pen.new(drawing, style)
+turtle  = Drawing::Turtle.new(drawing, style)
 
-pen.draw(line1)
-pen.draw(line2)
-pen.draw(triangle)
+turtle.move_to([0, 400])
+
+turtle.pen_down
+turtle.move_to([400, 0])
+
+turtle.pen_up
+turtle.move_to([0,0])
+
+turtle.pen_down
+turtle.move_to([400,400])
 
 File.write("sample.svg", drawing.to_svg)
