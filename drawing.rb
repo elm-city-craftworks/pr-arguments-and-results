@@ -8,19 +8,21 @@ class Drawing
     @viewbox_width  = (@width * 100).ceil
     @viewbox_height = (@height * 100).ceil
 
-    @lines  = []
+    @elements = []
   end
 
-  attr_reader :width, :height, :lines, :viewbox_width, :viewbox_height
+  attr_reader :width, :height, :elements, :viewbox_width, :viewbox_height
 
   def line(data, style)
     unless data.bounded_by?(@viewbox_width, @viewbox_height)
       raise ArgumentError, "shape is not within view box"
     end
 
-    @lines << { :x1 => data[0].x.to_s, :y1 => data[0].y.to_s, 
-                :x2 => data[1].x.to_s, :y2 => data[1].y.to_s,
-                :style => style.to_css } 
+    @elements << [:line, { :x1    => data[0].x.to_s, 
+                           :y1    => data[0].y.to_s, 
+                           :x2    => data[1].x.to_s, 
+                           :y2    => data[1].y.to_s,
+                           :style => style.to_css }] 
   end
 
   def to_svg
@@ -36,7 +38,7 @@ class Drawing
                    :version => "1.1" }
 
     builder.svg(svg_params) do |svg|
-      lines.each { |params| svg.line(params) }
+      elements.each { |element_type, params| svg.tag!(element_type, params) }
     end
 
     builder.target!
@@ -73,7 +75,7 @@ class Drawing
     attr_reader :stroke_width, :stroke_color
 
     def to_css
-      "stroke: #{@stroke_color}; stroke-width: #{@stroke_width}"
+      "stroke: #{stroke_color}; stroke-width: #{stroke_width}"
     end
   end
 end
