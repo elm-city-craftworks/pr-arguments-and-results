@@ -1,24 +1,6 @@
 require "builder"
 
 class Drawing
-  class Line
-    def initialize(point1, point2)
-      @x1, @y1 = point1
-      @x2, @y2 = point2
-    end
-
-    attr_reader :x1, :y1, :x2, :y2
-  end
-
-  class Style
-    def initialize(params)
-      @stroke_width  = params.fetch(:stroke_width)
-      @stroke_color  = params.fetch(:stroke_color)
-    end
-
-    attr_reader :stroke_width, :stroke_color
-  end
-
   def initialize(width, height)
     @width  = width
     @height = height
@@ -26,16 +8,20 @@ class Drawing
     @lines  = []
   end
 
-  def line(coords, style)
-    @lines << { :x1 => coords.x1.to_s, :y1 => coords.y1.to_s, 
-                :x2 => coords.x2.to_s, :y2 => coords.y2.to_s,
-                :stroke => style.stroke_color, :"stroke-width" => style.stroke_width } 
+  def line(params)
+    @lines << { :x1             => params.fetch(:x1).to_s,
+                :y1             => params.fetch(:y1).to_s, 
+                :x2             => params.fetch(:x2).to_s, 
+                :y2             => params.fetch(:y2).to_s,
+                :stroke         => params.fetch(:stroke_color),
+                :"stroke-width" => params.fetch(:stroke_width) } 
   end
 
   attr_reader :width, :height, :lines
 
   def to_svg
     builder = Builder::XmlMarkup.new(:indent => 2)
+
     builder.instruct!
     builder.declare!(:DOCTYPE, :svg, :PUBLIC, "-//W3C//DTD SVG 1.1//EN",
                      "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd")
@@ -56,14 +42,10 @@ end
 
 drawing = Drawing.new(4,4)
 
-line1_data = Drawing::Line.new([100, 100], [200, 250])
-line2_data = Drawing::Line.new([125, 100], [200, 250])
+drawing.line(:x1 => 100, :y1 => 100, :x2 => 200, :y2 => 250,
+             :stroke_color => "blue", :stroke_width => 2)
 
-line_style = Drawing::Style.new(:stroke_color => "blue", :stroke_width => "2")
-
-
-drawing.line(line1_data, line_style)
-
-drawing.line(line2_data, line_style)
+drawing.line(:x1 => 300, :y1 => 100, :x2 => 200, :y2 => 250,
+             :stroke_color => "blue", :stroke_width => 2)
 
 File.write("sample.svg", drawing.to_svg)
