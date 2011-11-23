@@ -4,7 +4,7 @@ class Drawing
   def initialize(width, height)
     @width  = width
     @height = height
-    
+
     @viewbox_width  = (@width  * 100).ceil
     @viewbox_height = (@height * 100).ceil
 
@@ -13,13 +13,12 @@ class Drawing
 
   attr_reader :width, :height, :lines, :viewbox_width, :viewbox_height
 
-  def line(params)
-    @lines << { :x1    => params.fetch(:x1).to_s,
-                :y1    => params.fetch(:y1).to_s, 
-                :x2    => params.fetch(:x2).to_s, 
-                :y2    => params.fetch(:y2).to_s,
-                :style => "stroke: #{params.fetch(:stroke_color)}; "+
-                          "stroke-width: #{params.fetch(:stroke_width)}" }
+  def line(data, style)
+    @lines << { :x1    => data[0].x.to_s, 
+                :y1    => data[0].y.to_s, 
+                :x2    => data[1].x.to_s, 
+                :y2    => data[1].y.to_s,
+                :style => style.to_css } 
   end
 
   def to_svg
@@ -41,15 +40,48 @@ class Drawing
 
     builder.target!
   end
+
+  class Point
+    def initialize(x, y)
+      @x, @y = x, y
+    end
+
+    attr_reader :x, :y
+  end
+
+  class Shape
+    def initialize(*point_data)
+      @points = point_data.map { |e| Point.new(*e) }
+    end
+
+    def [](index)
+      @points[index]
+    end
+  end
+  
+  class Style
+    def initialize(params)
+      @stroke_width  = params.fetch(:stroke_width)
+      @stroke_color  = params.fetch(:stroke_color)
+    end
+
+    attr_reader :stroke_width, :stroke_color
+
+    def to_css
+      "stroke: #{@stroke_color}; stroke-width: #{@stroke_width}"
+    end
+  end
 end
 
 drawing = Drawing.new(4,4)
 
-drawing.line(:x1 => 100, :y1 => 100, :x2 => 200, :y2 => 250,
-             :stroke_color => "blue", :stroke_width => 2)
+line1 = Drawing::Shape.new([100, 100], [200, 250])
+line2 = Drawing::Shape.new([300, 100], [200, 250])
 
-drawing.line(:x1 => 300, :y1 => 100, :x2 => 200, :y2 => 250,
-             :stroke_color => "blue", :stroke_width => 2)
+line_style = Drawing::Style.new(:stroke_color => "blue", :stroke_width => "2")
+
+drawing.line(line1, line_style)
+
+drawing.line(line2, line_style)
 
 File.write("sample.svg", drawing.to_svg)
-
