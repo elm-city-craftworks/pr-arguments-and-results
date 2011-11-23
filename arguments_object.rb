@@ -1,15 +1,24 @@
 require "builder"
 
 class Drawing
-  class Line
-    def initialize(point1, point2)
-      @x1, @y1 = point1
-      @x2, @y2 = point2
+  class Point
+    def initialize(x, y)
+      @x, @y = x, y
     end
 
-    attr_reader :x1, :y1, :x2, :y2
+    attr_reader :x, :y
   end
 
+  class Shape
+    def initialize(*point_data)
+      @points = point_data.map { |e| Point.new(*e) }
+    end
+
+    def [](index)
+      @points[index]
+    end
+  end
+  
   class Style
     def initialize(params)
       @stroke_width  = params.fetch(:stroke_width)
@@ -26,9 +35,9 @@ class Drawing
     @lines  = []
   end
 
-  def line(coords, style)
-    @lines << { :x1 => coords.x1.to_s, :y1 => coords.y1.to_s, 
-                :x2 => coords.x2.to_s, :y2 => coords.y2.to_s,
+  def line(data, style)
+    @lines << { :x1 => data[0].x.to_s, :y1 => data[0].y.to_s, 
+                :x2 => data[1].x.to_s, :y2 => data[1].y.to_s,
                 :stroke => style.stroke_color, :"stroke-width" => style.stroke_width } 
   end
 
@@ -56,14 +65,13 @@ end
 
 drawing = Drawing.new(4,4)
 
-line1_data = Drawing::Line.new([100, 100], [200, 250])
-line2_data = Drawing::Line.new([125, 100], [200, 250])
+line1 = Drawing::Shape.new([100, 100], [200, 250])
+line2 = Drawing::Shape.new([300, 100], [200, 250])
 
 line_style = Drawing::Style.new(:stroke_color => "blue", :stroke_width => "2")
 
+drawing.line(line1, line_style)
 
-drawing.line(line1_data, line_style)
-
-drawing.line(line2_data, line_style)
+drawing.line(line2, line_style)
 
 File.write("sample.svg", drawing.to_svg)
