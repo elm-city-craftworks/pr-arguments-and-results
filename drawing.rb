@@ -121,19 +121,34 @@ class Drawing
       "fill: #{@fill_color}"
     end
   end
+
+  class Pen
+    def initialize(drawing, style)
+      @drawing, @style = drawing, style
+    end
+
+    def draw(shape)
+      drawing.draw(shape, style)
+    end
+    
+    private
+
+    attr_reader :drawing, :style
+  end
 end
 
-drawing = Drawing.new(4,4)
 
 line1 = Drawing::Line.new([100, 100], [200, 250])
 line2 = Drawing::Line.new([300, 100], [200, 250])
 
 triangle = Drawing::Polygon.new([350, 150], [250, 300], [150,150])
 
-style = Drawing::Style.new(:stroke_color => "blue", :stroke_width => 2)
+drawing = Drawing.new(4,4)
+style   = Drawing::Style.new(:stroke_color => "blue", :stroke_width => 2)
+pen     = Drawing::Pen.new(drawing, style)
 
-drawing.draw(line1, style)
-drawing.draw(line2, style)
-drawing.draw(triangle, style)
+pen.draw(line1)
+pen.draw(line2)
+pen.draw(triangle)
 
 File.write("sample.svg", drawing.to_svg)
