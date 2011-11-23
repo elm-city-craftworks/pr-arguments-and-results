@@ -5,7 +5,7 @@ class Drawing
     @width  = width
     @height = height
 
-    @viewbox_width  = (@width  * 100).ceil
+    @viewbox_width  = (@width * 100).ceil
     @viewbox_height = (@height * 100).ceil
 
     @lines  = []
@@ -14,16 +14,17 @@ class Drawing
   attr_reader :width, :height, :lines, :viewbox_width, :viewbox_height
 
   def line(data, style)
-    @lines << { :x1    => data[0].x.to_s, 
-                :y1    => data[0].y.to_s, 
-                :x2    => data[1].x.to_s, 
-                :y2    => data[1].y.to_s,
+    unless data.bounded_by?(@viewbox_width, @viewbox_height)
+      raise ArgumentError, "shape is not within view box"
+    end
+
+    @lines << { :x1 => data[0].x.to_s, :y1 => data[0].y.to_s, 
+                :x2 => data[1].x.to_s, :y2 => data[1].y.to_s,
                 :style => style.to_css } 
   end
 
   def to_svg
     builder = Builder::XmlMarkup.new(:indent => 2)
-
     builder.instruct!
     builder.declare!(:DOCTYPE, :svg, :PUBLIC, "-//W3C//DTD SVG 1.1//EN",
                      "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd")
@@ -57,12 +58,16 @@ class Drawing
     def [](index)
       @points[index]
     end
+
+    def bounded_by?(x_max, y_max)
+      @points.all? { |p| p.x <= x_max && p.y <= y_max }
+    end
   end
   
   class Style
     def initialize(params)
-      @stroke_width  = params.fetch(:stroke_width)
-      @stroke_color  = params.fetch(:stroke_color)
+      @stroke_width  = params.fetch(:stroke_width, 5)
+      @stroke_color  = params.fetch(:stroke_color, "black")
     end
 
     attr_reader :stroke_width, :stroke_color
