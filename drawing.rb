@@ -83,7 +83,7 @@ drawing = Drawing.new(4,4)
 line1 = Drawing::Shape.new([100, 100], [200, 250])
 line2 = Drawing::Shape.new([300, 100], [200, 250])
 
-line_style = Drawing::Style.new(:stroke_color => "blue", :stroke_width => "2")
+line_style = Drawing::Style.new(:stroke_color => "blue", :stroke_width => 2)
 
 drawing.line(line1, line_style)
 
